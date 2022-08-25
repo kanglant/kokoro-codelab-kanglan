@@ -27,9 +27,10 @@ set -e
 
 # Install Bazel?
 
-git clone --depth 1 https://github.com/tensorflow/tensorflow.git -b r2.10 ## shallow clone, copy only the latest revision--> save time
+git clone --depth 1 https://github.com/tensorflow/tensorflow.git ## shallow clone, copy only the latest revision--> save time
 
-# git checkout r2.10  # r2.2, r2.3, etc.
+#  -b r2.10
+# git checkout r2.10  # r2.2, r2.3, etc. 
 
 # ./configure 
 # ## <-
@@ -44,26 +45,21 @@ git clone --depth 1 https://github.com/tensorflow/tensorflow.git -b r2.10 ## sha
 # bazel build //tensorflow/tools/pip_package:build_pip_package
 
 mkdir packages
-mkdir cache
+mkdir bazelcache
 
 docker pull tensorflow/build:latest-python3.9
 
-docker run --name tf -w /tf/tensorflow -it -d \
-  -v "${PWD}/packages:/tf/pkg" \
-  -v "${PWD}/tensorflow:/tf/tensorflow" \
-  -v "${PWD}/bazelcache:/tf/cache" \
-  tensorflow/build:latest-python3.9 \
-  bash
+docker run --name tf -w /tf/tensorflow -it -d -v "${PWD}/packages:/tf/pkg" -v "${PWD}/tensorflow:/tf/tensorflow" -v "${PWD}/bazelcache:/tf/cache" tensorflow/build:latest-python3.9 bash
 
 docker exec tf python3 tensorflow/tools/ci_build/update_version.py --nightly
 
 docker exec tf bazel --bazelrc=/usertools/cpu.bazelrc build --config=sigbuild_local_cache tensorflow/tools/pip_package:build_pip_package
 
-docker exec tf \
-  ./bazel-bin/tensorflow/tools/pip_package/build_pip_package \
-  /tf/pkg \
-  --cpu \
-  --nightly_flag
+docker exec tf ./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tf/pkg --cpu --nightly_flag
 
 docker exec tf /usertools/rename_and_verify_wheels.sh
 
+ls -al /tmp/packages
+
+# docker kill tf
+# docker rm tf
