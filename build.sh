@@ -22,15 +22,14 @@ set -e
 
 
 # Install?
-# pip install -U --user pip numpy wheel packaging requests opt_einsum
-# pip install -U --user keras_preprocessing --no-deps
+# pip install -U pip numpy wheel packaging requests opt_einsum
+# pip install -U keras_preprocessing --no-deps
 
 # Install Bazel?
 
 git clone --depth 1 https://github.com/tensorflow/tensorflow.git -b r2.10 ## shallow clone, copy only the latest revision--> save time
-cd tensorflow
 
-git checkout r2.10  # r2.2, r2.3, etc.
+# git checkout r2.10  # r2.2, r2.3, etc.
 
 # ./configure 
 # ## <-
@@ -41,23 +40,14 @@ git checkout r2.10  # r2.2, r2.3, etc.
 # # Do you wish to download a fresh release of clang? (Experimental) [y/N]:
 # # Please specify optimization flags to use during compilation when bazel option "--config=opt" is specified [Default is -Wno-sign-compare]: 
 # # Would you like to interactively configure ./WORKSPACE for Android builds? [y/N]: 
-# /usr/bin/python3
-# /usr/lib/python3.10/dist-packages
-# N
-# N
-# N
-# -Wno-sign-compare
-# N
 # ##
-
 # bazel build //tensorflow/tools/pip_package:build_pip_package
 
-
-cd ..
 mkdir packages
 mkdir cache
-# Start following steps on build repo
+
 docker pull tensorflow/build:latest-python3.9
+
 docker run --name tf -w /tf/tensorflow -it -d \
   -v "${PWD}/packages:/tf/pkg" \
   -v "${PWD}/tensorflow:/tf/tensorflow" \
