@@ -59,7 +59,7 @@ docker exec tf ./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tf/pk
 
 docker exec tf /usertools/rename_and_verify_wheels.sh
 
-ls -al /tmp/packages
+ls -al $PWD/packages
 
 # docker kill tf
 # docker rm tf
