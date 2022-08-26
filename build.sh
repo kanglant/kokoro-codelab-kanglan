@@ -19,30 +19,7 @@ set -e
 # fi
 # java Hello
 
-
-
-# Install?
-# pip install -U pip numpy wheel packaging requests opt_einsum
-# pip install -U keras_preprocessing --no-deps
-
-# Install Bazel?
-
 git clone --depth 1 https://github.com/tensorflow/tensorflow.git ## shallow clone, copy only the latest revision--> save time
-
-#  -b r2.10
-# git checkout r2.10  # r2.2, r2.3, etc. 
-
-# ./configure 
-# ## <-
-# # Please specify the location of python. [Default is /usr/bin/python3]: 
-# # Please input the desired Python library path to use.  Default is [/usr/lib/python3.10/dist-packages]
-# # Do you wish to build TensorFlow with ROCm support? [y/N]: 
-# # Do you wish to build TensorFlow with CUDA support? [y/N]:
-# # Do you wish to download a fresh release of clang? (Experimental) [y/N]:
-# # Please specify optimization flags to use during compilation when bazel option "--config=opt" is specified [Default is -Wno-sign-compare]: 
-# # Would you like to interactively configure ./WORKSPACE for Android builds? [y/N]: 
-# ##
-# bazel build //tensorflow/tools/pip_package:build_pip_package
 
 mkdir packages
 mkdir bazelcache
@@ -60,6 +37,8 @@ docker exec tf ./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tf/pk
 docker exec tf /usertools/rename_and_verify_wheels.sh
 
 ls -al $PWD/packages
+
+docker stop tf
 
 # docker kill tf
 # docker rm tf
