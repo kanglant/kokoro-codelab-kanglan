@@ -2,7 +2,6 @@
 
 # Fail on any error.
 set -e
-# Test
 # Display commands being run.
 # WARNING: please only enable 'set -x' if necessary for debugging, and be very
 #  careful if you handle credentials (e.g. from Keystore) with 'set -x':
