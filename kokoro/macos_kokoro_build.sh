@@ -23,15 +23,15 @@ function upgrade_pyenv() {
   if [[ ! -d "$PYENV_ROOT" ]]; then
     brew list pyenv &>/dev/null || echo "pyenv is not pre-installed." && exit 1
   fi
+  pyenv --version
   if brew list pyenv &>/dev/null; then
     # On "ventura-slcn" VMs, pyenv is managed via Homebrew.
     echo "pyenv is installed and managed by homebrew."
     brew update && brew upgrade pyenv
   else
     echo "pyenv is not managed by homebrew. Installing it via github..."
-    # TODO(kanglan): On "ventura" VMs, check the log to see if pyenv is also
-    # managed by Homebrew. If not, install the latest pyenv from github.
-    cp -r "$PYENV_ROOT" /tmp/pyenv_backup
+    # On "ventura" VMs, pyenv is not managed by Homebrew. Install
+    # the latest pyenv from github.
     rm -rf "$PYENV_ROOT"
     git clone https://github.com/pyenv/pyenv.git "$PYENV_ROOT"
   fi
