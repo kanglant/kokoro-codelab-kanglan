@@ -31,7 +31,7 @@ function upgrade_pyenv() {
     echo "pyenv is not managed by homebrew. Installing it via github..."
     # TODO(kanglan): On "ventura" VMs, check the log to see if pyenv is also
     # managed by Homebrew. If not, install the latest pyenv from github.
-    cp "$PYENV_ROOT" /tmp/pyenv_backup
+    cp -r "$PYENV_ROOT" /tmp/pyenv_backup
     rm -rf "$PYENV_ROOT"
     git clone https://github.com/pyenv/pyenv.git "$PYENV_ROOT"
   fi
