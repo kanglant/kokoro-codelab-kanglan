@@ -51,7 +51,7 @@ function install_dependencies() {
   git clone https://github.com/google-ml-infra/jax-fork.git ./jax
   cd jax
   "$PYTHON" -m pip install --upgrade pip
-  "$PYTHON" -m pip install -r --upgrade -r ./build/requirements.in
+  "$PYTHON" -m pip install --upgrade -r ./build/requirements.in
 }
 
 upgrade_pyenv
