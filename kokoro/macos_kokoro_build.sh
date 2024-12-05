@@ -48,7 +48,8 @@ function install_python() {
 
 function install_dependencies() {
   echo "Install dependencies..."
-  cd github/jax
+  git clone https://github.com/google-ml-infra/jax-fork.git ./jax
+  cd jax
   "$PYTHON" -m pip install --upgrade pip
   "$PYTHON" -m pip install -r --upgrade -r ./build/requirements.in
 }
