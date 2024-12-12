@@ -18,7 +18,6 @@ set -e
 #cd "${KOKORO_ARTIFACTS_DIR}/github/kokoro-codelab-kanglan"
 #./build.sh
 echo "$KOKORO_JOB_NAME"
-qa:codelab/kanglan/macos_continuous
 if [[ "$KOKORO_JOB_NAME" =~ "*/macos_continuo*" ]]; then
   echo "test passed"
 fi
