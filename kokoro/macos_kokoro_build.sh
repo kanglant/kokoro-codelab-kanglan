@@ -1,65 +1,88 @@
 #!/bin/bash
 
-# Fail on any error.
-set -e
+# A wrapper script that acts as an entry point for Kokoro jobs that test the
+# JAX built artifacts. Triggered by the Louhi workflow upon completion of the
+# build_artifacts jobs, it specifically executes macos tests within the Kokoro
+# CI environment. Linux and Windows tests are currently handled through GitHub
+# Actions. This script facilitates the execution of test scripts located in the
+# ci/ folder of the JAX GitHub repository.
+#
+# -e: abort script if one command fails
+# -u: error if undefined variable used
+# -x: log all commands
+# -o history: record shell history
+# -o allexport: export all functions and variables to be available to subscripts
+set -exu -o history -o allexport
 
-# Display commands being run.
-# WARNING: please only enable 'set -x' if necessary for debugging, and be very
-#  careful if you handle credentials (e.g. from Keystore) with 'set -x':
-#  statements like "export VAR=$(cat /tmp/keystore/credentials)" will result in
-#  the credentials being printed in build logs.
-#  Additionally, recursive invocation with credentials as command-line
-#  parameters, will print the full command, with credentials, in the build logs.
-# set -x
+echo "Creating input files..."
+mkdir -p ${KOKORO_GFILE_DIR}
+pwd -P ${KOKORO_GFILE_DIR}
+touch ${KOKORO_GFILE_DIR}/jaxlib-0.4.38.dev20241215-cp310-cp310-macosx_10_14_x86_64.whl
+ls -lR "${KOKORO_GFILE_DIR}"
 
-# Code under repo is checked out to ${KOKORO_ARTIFACTS_DIR}/github.
-# The final directory name in this path is determined by the scm name specified
-# in the job configuration.
-#cd "${KOKORO_ARTIFACTS_DIR}/github/kokoro-codelab-kanglan"
-#./build.sh
-echo "$KOKORO_JOB_NAME"
-if [[ "$KOKORO_JOB_NAME" =~ .*/macos_.* ]]; then
-  echo "test passed"
-else
-  echo "failed"
-fi
+export JAXCI_HERMETIC_PYTHON_VERSION=3.10
+
+# Kokoro's MacOS VMs have pyenv pre-installed on both x86 and arm64 by default,
+# and the $PYENV_ROOT is set to $HOME/.pyenv.
+# Upgrade pyenv to the latest version (>=2.4.15) to support python 3.13.
 function upgrade_pyenv() {
   echo "Upgrading pyenv..."
-  if [[ ! -d "$PYENV_ROOT" ]]; then
-    brew list pyenv &>/dev/null || echo "pyenv is not pre-installed." && exit 1
-  fi
-  pyenv --version
+  echo "Current pyevn version: $(pyenv --version)"
   if brew list pyenv &>/dev/null; then
     # On "ventura-slcn" VMs, pyenv is managed via Homebrew.
     echo "pyenv is installed and managed by homebrew."
     brew update && brew upgrade pyenv
   else
     echo "pyenv is not managed by homebrew. Installing it via github..."
-    # On "ventura" VMs, pyenv is not managed by Homebrew. Install
-    # the latest pyenv from github.
-    # rm -rf "$PYENV_ROOT"
-    # git clone https://github.com/pyenv/pyenv.git "$PYENV_ROOT"
-    cd "$PYENV_ROOT"/plugins/python-build/../.. && git pull && cd -
+    # On "ventura" VMs, pyenv is not managed by Homebrew. Install the latest
+    # pyenv from github.
+    pushd "$PYENV_ROOT"/plugins/python-build/../.. && git pull && popd
   fi
-  pyenv --version
+  echo "Upgraded pyenv version: $(pyenv --version)"
 }
 
 function install_python() {
-  echo "Python setup..."
-  pyenv install 3.13
-  pyenv global 3.13
-  PYTHON=$(pyenv which python)
-  echo $PYTHON
+  echo "Installing Python..."
+  local python_version="$1"
+  pyenv install -s "$python_version"
+  pyenv global "$python_version"
+  JAXCI_PYTHON=$(pyenv which python)
 }
 
-function install_dependencies() {
-  echo "Install dependencies..."
-  git clone https://github.com/google-ml-infra/jax-fork.git ./jax
-  cd jax
-  "$PYTHON" -m pip install --upgrade pip
-  "$PYTHON" -m pip install --upgrade -r ./build/requirements.in
-}
+git clone https://github.com/google-ml-infra/jax-fork.git ./jax
+cd jax
 
-upgrade_pyenv
-install_python
-install_dependencies
+# Install python and other dependencies as docker is not supported on mac.
+if [[ "$JAXCI_HERMETIC_PYTHON_VERSION" == "3.13" ]]; then
+  upgrade_pyenv
+fi
+install_python "$JAXCI_HERMETIC_PYTHON_VERSION"
+echo "Install dependencies..."
+"$JAXCI_PYTHON" -m pip install --upgrade pip
+"$JAXCI_PYTHON" -m pip install --upgrade -r ./build/requirements.in
+
+# Remove periods from the JAXCI_HERMETIC_PYTHON_VERSION, e.g., if
+# JAXCI_HERMETIC_PYTHON_VERSION is "3.10", py_version becomes "310".
+py_version="${JAXCI_HERMETIC_PYTHON_VERSION//./}"
+
+# Find built artifacts with the same python version and platform
+if [[ "$KOKORO_JOB_NAME" =~ .*/macos_.* ]]; then
+  wheel_pattern="*cp${py_version}*macos*x86_64.whl"
+else
+  echo "Error: Unsupported platform: $KOKORO_JOB_NAME" && exit 1
+fi
+
+# Only one built artifact should be found.
+wheel_file=$(find "$KOKORO_GFILE_DIR" -name "$wheel_pattern")
+
+if [[ -z "$wheel_file" ]]; then
+  echo "Error: No wheel found matching the pattern '$wheel_pattern'" && exit 1
+fi
+
+# Copy the built artifact to the github/jax-fork/dist/ folder.
+cp "$wheel_file" ./dist/
+ls ./dist/
+
+# Run tests
+# echo "Run tests..."
+# ./ci/run_pytest_cpu.sh
