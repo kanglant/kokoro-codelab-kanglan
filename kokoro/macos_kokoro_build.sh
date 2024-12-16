@@ -80,6 +80,7 @@ if [[ -z "$wheel_file" ]]; then
 fi
 
 # Copy the built artifact to the github/jax-fork/dist/ folder.
+mkdir -p dist
 cp "$wheel_file" ./dist/
 ls ./dist/
 
