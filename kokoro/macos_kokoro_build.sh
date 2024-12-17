@@ -14,6 +14,8 @@
 # -o allexport: export all functions and variables to be available to subscripts
 set -exu -o history -o allexport
 
+export DEVELOPER_DIR=/Applications/Xcode_16.0.app/Contents/Developer
+
 echo "Checking clang version"
 clang --version
 
