@@ -14,6 +14,12 @@
 # -o allexport: export all functions and variables to be available to subscripts
 set -exu -o history -o allexport
 
+echo "Checking clang version"
+clang --version
+
+echo "Checking swift version"
+swift --version
+
 echo "Creating input files..."
 mkdir -p ${KOKORO_GFILE_DIR}
 pwd -P ${KOKORO_GFILE_DIR}
