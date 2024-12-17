@@ -22,11 +22,11 @@ clang --version
 echo "Checking swift version"
 swift --version
 
-echo "Creating input files..."
-mkdir -p ${KOKORO_GFILE_DIR}
-pwd -P ${KOKORO_GFILE_DIR}
-touch ${KOKORO_GFILE_DIR}/jaxlib-0.4.38.dev20241215-cp310-cp310-macosx_10_14_x86_64.whl
-ls -lR "${KOKORO_GFILE_DIR}"
+# echo "Creating input files..."
+# mkdir -p ${KOKORO_GFILE_DIR}
+# pwd -P ${KOKORO_GFILE_DIR}
+# touch ${KOKORO_GFILE_DIR}/jaxlib-0.4.38.dev20241215-cp310-cp310-macosx_10_14_x86_64.whl
+# ls -lR "${KOKORO_GFILE_DIR}"
 
 export JAXCI_HERMETIC_PYTHON_VERSION=3.10
 
@@ -60,6 +60,10 @@ function install_python() {
 git clone https://github.com/google-ml-infra/jax-fork.git ./jax
 cd jax
 
+artifact="jaxlib"
+CMD="./ci/build_artifacts.sh $artifact"
+eval "$CMD"
+
 # Install python and other dependencies as docker is not supported on mac.
 if [[ "$JAXCI_HERMETIC_PYTHON_VERSION" == "3.13" ]]; then
   upgrade_pyenv
@@ -81,14 +85,15 @@ else
 fi
 
 # Only one built artifact should be found.
-wheel_file=$(find "$KOKORO_GFILE_DIR" -name "$wheel_pattern")
+# wheel_file=$(find "$KOKORO_GFILE_DIR" -name "$wheel_pattern")
+wheel_file=$(find ./dist/ -name "$wheel_pattern")
 
 if [[ -z "$wheel_file" ]]; then
   echo "Error: No wheel found matching the pattern '$wheel_pattern'" && exit 1
 fi
 
 # Copy the built artifact to the github/jax-fork/dist/ folder.
-mkdir -p dist
+# mkdir -p dist
 cp "$wheel_file" ./dist/
 ls ./dist/
 
