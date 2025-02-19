@@ -11,7 +11,7 @@
 #  Additionally, recursive invocation with credentials as command-line
 #  parameters, will print the full command, with credentials, in the build logs.
 # set -x
-set -exu -o history -o allexport
+set -ex -o history -o allexport
 
 # Install pyenv
 git clone https://github.com/pyenv/pyenv.git ~/.pyenv
@@ -21,6 +21,8 @@ echo 'eval "$(pyenv init - bash)"' >> ~/.bashrc
 source ~/.bashrc
 pyenv install 3.10
 pyenv global 3.10
+
+set -u
 
 # Code under repo is checked out to ${KOKORO_ARTIFACTS_DIR}/github.
 # The final directory name in this path is determined by the scm name specified
