@@ -57,46 +57,49 @@ function install_python() {
   JAXCI_PYTHON=$(pyenv which python)
 }
 
-git clone https://github.com/google-ml-infra/jax-fork.git ./jax
-cd jax
+upgrade_pyenv
+install_python 3.13t
 
-artifact="jaxlib"
-CMD="./ci/build_artifacts.sh $artifact"
-eval "$CMD"
+# git clone https://github.com/google-ml-infra/jax-fork.git ./jax
+# cd jax
 
-# Install python and other dependencies as docker is not supported on mac.
-if [[ "$JAXCI_HERMETIC_PYTHON_VERSION" == "3.13" ]]; then
-  upgrade_pyenv
-fi
-install_python "$JAXCI_HERMETIC_PYTHON_VERSION"
-echo "Install dependencies..."
-"$JAXCI_PYTHON" -m pip install --upgrade pip
-"$JAXCI_PYTHON" -m pip install --upgrade -r ./build/requirements.in
+# artifact="jaxlib"
+# CMD="./ci/build_artifacts.sh $artifact"
+# eval "$CMD"
 
-# Remove periods from the JAXCI_HERMETIC_PYTHON_VERSION, e.g., if
-# JAXCI_HERMETIC_PYTHON_VERSION is "3.10", py_version becomes "310".
-py_version="${JAXCI_HERMETIC_PYTHON_VERSION//./}"
+# # Install python and other dependencies as docker is not supported on mac.
+# if [[ "$JAXCI_HERMETIC_PYTHON_VERSION" == "3.13" ]]; then
+#   upgrade_pyenv
+# fi
+# install_python "$JAXCI_HERMETIC_PYTHON_VERSION"
+# echo "Install dependencies..."
+# "$JAXCI_PYTHON" -m pip install --upgrade pip
+# "$JAXCI_PYTHON" -m pip install --upgrade -r ./build/requirements.in
 
-# Find built artifacts with the same python version and platform
-if [[ "$KOKORO_JOB_NAME" =~ .*/macos_.* ]]; then
-  wheel_pattern="*cp${py_version}*macos*x86_64.whl"
-else
-  echo "Error: Unsupported platform: $KOKORO_JOB_NAME" && exit 1
-fi
+# # Remove periods from the JAXCI_HERMETIC_PYTHON_VERSION, e.g., if
+# # JAXCI_HERMETIC_PYTHON_VERSION is "3.10", py_version becomes "310".
+# py_version="${JAXCI_HERMETIC_PYTHON_VERSION//./}"
 
-# Only one built artifact should be found.
-# wheel_file=$(find "$KOKORO_GFILE_DIR" -name "$wheel_pattern")
-wheel_file=$(find ./dist/ -name "$wheel_pattern")
+# # Find built artifacts with the same python version and platform
+# if [[ "$KOKORO_JOB_NAME" =~ .*/macos_.* ]]; then
+#   wheel_pattern="*cp${py_version}*macos*x86_64.whl"
+# else
+#   echo "Error: Unsupported platform: $KOKORO_JOB_NAME" && exit 1
+# fi
 
-if [[ -z "$wheel_file" ]]; then
-  echo "Error: No wheel found matching the pattern '$wheel_pattern'" && exit 1
-fi
+# # Only one built artifact should be found.
+# # wheel_file=$(find "$KOKORO_GFILE_DIR" -name "$wheel_pattern")
+# wheel_file=$(find ./dist/ -name "$wheel_pattern")
 
-# Copy the built artifact to the github/jax-fork/dist/ folder.
-# mkdir -p dist
-cp "$wheel_file" ./dist/
-ls ./dist/
+# if [[ -z "$wheel_file" ]]; then
+#   echo "Error: No wheel found matching the pattern '$wheel_pattern'" && exit 1
+# fi
 
-# Run tests
-# echo "Run tests..."
-# ./ci/run_pytest_cpu.sh
+# # Copy the built artifact to the github/jax-fork/dist/ folder.
+# # mkdir -p dist
+# cp "$wheel_file" ./dist/
+# ls ./dist/
+
+# # Run tests
+# # echo "Run tests..."
+# # ./ci/run_pytest_cpu.sh
