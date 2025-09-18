@@ -44,7 +44,7 @@ function upgrade_pyenv() {
     echo "pyenv is not managed by homebrew. Installing it via github..."
     # On "ventura" VMs, pyenv is not managed by Homebrew. Install the latest
     # pyenv from github.
-    pushd "$PYENV_ROOT"/plugins/python-build/../.. && git pull && popd
+    pushd "$PYENV_ROOT"/plugins/python-build/../.. && git fetch && git checkout v2.6.7 && popd
   fi
   echo "Upgraded pyenv version: $(pyenv --version)"
 }
